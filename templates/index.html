@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AJ's and Dylan's Redistricting Map Creator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🗳️ AJ's & Dylan's Redistricting Map Creator</h1>
+            <p class="subtitle">Create your own district map based on voter distribution</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Left Panel: Vote Distribution & Controls -->
+            <div class="left-panel">
+                <section class="vote-section">
+                    <h2>Vote Distribution</h2>
+                    <div class="grid-container">
+                        <div id="voteGrid" class="grid"></div>
+                    </div>
+                    <div class="vote-stats">
+                        <div class="stat hearts">
+                            <span class="icon">♥</span>
+                            <span class="count">12 Hearts (48%)</span>
+                        </div>
+                        <div class="stat clubs">
+                            <span class="icon">♣</span>
+                            <span class="count">13 Clubs (52%)</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="rules-section">
+                    <h3>📋 Districting Rules</h3>
+                    <ol>
+                        <li><strong>5 districts</strong> with exactly <strong>5 cells</strong> each</li>
+                        <li>Districts must be <strong>contiguous</strong> (connected by sides, not corners)</li>
+                        <li>Winner: Party with more votes in district wins that district</li>
+                    </ol>
+                </section>
+
+                <section class="controls-section">
+                    <h3>🎨 Create Your District</h3>
+                    <div class="district-selector">
+                        <button class="district-btn active" data-district="0" style="background: #4A90E2;">District 1</button>
+                        <button class="district-btn" data-district="1" style="background: #50C878;">District 2</button>
+                        <button class="district-btn" data-district="2" style="background: #FFD700;">District 3</button>
+                        <button class="district-btn" data-district="3" style="background: #FF6B6B;">District 4</button>
+                        <button class="district-btn" data-district="4" style="background: #9B59B6;">District 5</button>
+                    </div>
+                    
+                    <div class="type-selector">
+                        <label>I am drawing as:</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="planType" value="neutral" checked>
+                                <span>Neutral</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="planType" value="hearts_representative">
+                                <span>Hearts Representative</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="name-input">
+                        <label for="userName">Your Name (optional):</label>
+                        <input type="text" id="userName" placeholder="Anonymous">
+                    </div>
+
+                    <div class="action-buttons">
+                        <button id="clearBtn" class="btn btn-secondary">Clear All</button>
+                        <button id="validateBtn" class="btn btn-primary">Validate Plan</button>
+                        <button id="submitBtn" class="btn btn-success" disabled>Submit Plan</button>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Panel: District Map -->
+            <div class="right-panel">
+                <section class="district-section">
+                    <h2>Your District Map</h2>
+                    <div class="grid-container">
+                        <div id="districtGrid" class="grid"></div>
+                    </div>
+                    
+                    <div id="validationMessage" class="message"></div>
+                    
+                    <div id="results" class="results" style="display: none;">
+                        <h3>Election Results</h3>
+                        <div id="overallResults" class="overall-results"></div>
+                        <div id="districtResults" class="district-results"></div>
+                    </div>
+                </section>
+
+                <section class="user-plans-section">
+                    <h3>Your Submitted Plans</h3>
+                    <div id="userPlansList" class="user-plans-list">
+                        <p class="empty-message">No plans submitted yet</p>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Consensus Maps Section -->
+        <section class="consensus-section">
+            <h2>📊 Consensus District Maps</h2>
+            <p class="section-desc">These maps show the average districting from all submitted plans</p>
+            
+            <button id="generateConsensusBtn" class="btn btn-primary">Generate Consensus Maps</button>
+            
+            <div id="consensusMaps" class="consensus-maps" style="display: none;">
+                <div class="consensus-map">
+                    <h3>All Plans</h3>
+                    <img id="consensusAll" src="" alt="Consensus All Plans">
+                    <div id="compactnessAll" class="compactness-metrics"></div>
+                </div>
+                <div class="consensus-map">
+                    <h3>Neutral Plans</h3>
+                    <img id="consensusNeutral" src="" alt="Consensus Neutral Plans">
+                    <div id="compactnessNeutral" class="compactness-metrics"></div>
+                </div>
+                <div class="consensus-map">
+                    <h3>Hearts Representative Plans</h3>
+                    <img id="consensusHearts" src="" alt="Consensus Hearts Plans">
+                    <div id="compactnessHearts" class="compactness-metrics"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Rankings Section -->
+        <section class="rankings-section">
+            <h2>🏆 Plan Rankings by Compactness</h2>
+            <p class="section-desc">Plans ranked by Polsby-Popper score (higher = more compact) and cut edges (lower = better)</p>
+            
+            <button id="generateRankingsBtn" class="btn btn-primary">Show Rankings</button>
+            
+            <div id="rankingsTable" style="display: none; margin-top: 20px;">
+                <div class="table-responsive">
+                    <table class="rankings-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Plan Name</th>
+                                <th>Type</th>
+                                <th>Avg Polsby-Popper</th>
+                                <th>Cut Edges</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rankingsBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Pass vote grid data from Flask to JavaScript
+        // eslint-disable-next-line
+        // @ts-ignore
+        const voteGrid = {{ vote_grid | tojson | safe }};
+    </script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
